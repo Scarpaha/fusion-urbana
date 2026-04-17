@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fusión Urbana - Sabor Callejero</title>
+    <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/d/1iPkRa4hHId1K8u4fVUo6jMx4ajfopGzi">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
+        
+        :root {
+            --fu-negro: #0A0A0A;
+            --fu-naranja: #FF4D00;
+            --fu-amarillo: #FFCC00;
+            --fu-gris-card: #161b22;
+        }
+
+        body { 
+            background-color: var(--fu-negro); 
+            color: #FFFFFF;
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .main-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .scrollable-content {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 120px;
+        }
+
+        .brand-header {
+            padding: 25px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: linear-gradient(180deg, rgba(255, 77, 0, 0.15) 0%, rgba(10, 10, 10, 0) 100%);
+        }
+
+        .logo-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .favicon-img { max-width: 70px; height: auto; object-fit: contain; }
+        .logo-img { max-width: 200px; height: auto; object-fit: contain; }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 12px;
+            padding: 12px;
+        }
+
+        @media (min-width: 768px) {
+            .product-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        .card-fu {
+            background-color: var(--fu-gris-card);
+            border: 1.5px solid rgba(255, 77, 0, 0.2);
+            border-radius: 20px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 230px;
+        }
+
+        /* Estilo para Stock 0 */
+        .product-out-of-stock {
+            opacity: 0.3;
+            pointer-events: none;
+            filter: grayscale(1);
+        }
+
+        .category-label {
+            color: var(--fu-naranja);
+            font-size: 8px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .product-name {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-top: 4px;
+            line-height: 1.2;
+            color: white;
+        }
+
+        .product-price {
+            color: var(--fu-amarillo);
+            font-size: 1.2rem;
+            font-weight: 900;
+            margin: 8px 0;
+        }
+
+        .qty-selector {
+            background-color: #21262d;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .qty-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; }
+
+        .btn-añadir {
+            background-color: var(--fu-amarillo);
+            color: black;
+            font-weight: 900;
+            text-transform: uppercase;
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 11px;
+            transition: 0.2s;
+        }
+
+        .btn-añadir:active { transform: scale(0.95); }
+
+        .category-btn {
+            background: #21262d;
+            color: #8696A0;
+            border: 1px solid #30363d;
+            white-space: nowrap;
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 900;
+        }
+
+        .category-btn.active {
+            background: var(--fu-naranja);
+            color: white;
+            border-color: var(--fu-naranja);
+        }
+
+        #cartSummary { background-color: #25D366; }
+        #cartModal { display: none; background: rgba(0,0,0,0.95); backdrop-filter: blur(8px); position: fixed; inset: 0; z-index: 100; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <header class="brand-header">
+            <div class="logo-wrapper">
+                <img src="https://lh3.googleusercontent.com/d/1iPkRa4hHId1K8u4fVUo6jMx4ajfopGzi" alt="Favicon" class="favicon-img">
+                <img src="https://lh3.googleusercontent.com/d/1Ufb2o_Chw58k2OwU0BynxmPOp5jlDkUD" alt="Fusión Urbana" class="logo-img">
+            </div>
+            
+            <div id="cartSummary" class="hidden w-full max-w-xs p-3 rounded-2xl flex justify-between items-center shadow-lg mt-6">
+                <div class="flex items-center gap-2 text-white">
+                    <span id="cartCount" class="bg-white text-green-600 font-black px-2 py-0.5 rounded text-xs">0</span>
+                    <span class="text-[10px] font-bold uppercase">Total: <span id="cartTotal" class="ml-1">$0</span></span>
+                </div>
+                <button onclick="openCart()" class="bg-black/20 px-3 py-1 rounded-lg text-[10px] font-black uppercase text-white">Ver Pedido</button>
+            </div>
+        </header>
+
+        <div class="scrollable-content">
+            <main class="max-w-4xl mx-auto">
+                <div id="categoryContainer" class="flex gap-2 overflow-x-auto p-4 no-scrollbar"></div>
+                <div id="productGrid" class="product-grid"></div>
+            </main>
+        </div>
+    </div>
+
+    <div id="cartModal" onclick="if(event.target == this) closeCart()">
+        <div class="bg-[#161b22] w-full max-w-md mx-auto mt-10 rounded-t-3xl overflow-hidden flex flex-col max-h-[85vh] shadow-2xl">
+            <div class="p-4 border-b border-gray-700 flex justify-between items-center bg-[#202C33]">
+                <span class="font-black text-xs uppercase text-white">Tu Pedido a Fusión Urbana</span>
+                <button onclick="closeCart()" class="p-2 bg-gray-700 rounded-full text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            <div id="cartItems" class="p-4 overflow-y-auto flex-1 space-y-3 bg-[#0b141a]"></div>
+            <div class="p-6 space-y-4 border-t border-gray-700 bg-[#161b22]">
+                <div class="grid grid-cols-2 gap-2 p-1 bg-gray-800 rounded-xl">
+                    <button id="btnEnvio" onclick="setMetodo('ENVIO')" class="py-2.5 rounded-lg font-black text-[10px] uppercase">A Domicilio</button>
+                    <button id="btnRetiro" onclick="setMetodo('RETIRO')" class="py-2.5 rounded-lg font-black text-[10px] uppercase">Retiro Local</button>
+                </div>
+                <div class="flex justify-between items-center px-1">
+                    <span class="text-xs font-bold text-gray-400 uppercase">Total:</span>
+                    <span id="modalTotal" class="text-2xl font-black text-[#25D366]">$0</span>
+                </div>
+                <button onclick="sendOrder()" class="w-full bg-[#25D366] text-white py-4 rounded-2xl font-black uppercase text-sm shadow-lg active:scale-95 transition-all">Enviar a WhatsApp</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            whatsapp: "56999044809",
+            csvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQckJU1ylobI0Qa7OwFeDhLOdcfL3XrkTuU5d2h1PHy3EKFjym8UMxzvnwgSYNaD5UlAGd9AhSFL1i0/pub?output=csv'
+        };
+
+        let inventory = [], cart = [], selectedCategory = "TODOS", metodo = "ENVIO";
+        const clp = (v) => new Intl.NumberFormat('es-CL').format(v);
+
+        async function init() {
+            try {
+                const res = await fetch(CONFIG.csvUrl);
+                const text = await res.text();
+                const rows = text.split('\n').slice(1);
+                inventory = rows.map((row, i) => {
+                    const c = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                    return {
+                        id: i,
+                        type: (c[0] || "OTROS").trim().replace(/"/g, "").toUpperCase(),
+                        content: (c[1] || "").trim().replace(/"/g, ""),
+                        stock: parseInt((c[2] || "0").replace(/[^0-9]/g, "")) || 0,
+                        price: parseInt((c[3] || "0").replace(/[^0-9]/g, "")) || 0
+                    };
+                }).filter(p => p.price > 0);
+                renderCategories();
+                renderProducts();
+                updateUI();
+            } catch (e) { console.error("Error cargando datos"); }
+        }
+
+        function renderCategories() {
+            const uniqueTypes = [...new Set(inventory.map(p => p.type))].sort();
+            const types = ["TODOS", ...uniqueTypes];
+            document.getElementById('categoryContainer').innerHTML = types.map(t => `
+                <button onclick="filter('${t}')" class="category-btn ${selectedCategory === t ? 'active' : ''}">${t}</button>
+            `).join('');
+        }
+
+        function renderProducts() {
+            const grid = document.getElementById('productGrid');
+            const filtered = selectedCategory === "TODOS" ? inventory : inventory.filter(p => p.type === selectedCategory);
+            grid.innerHTML = filtered.map(p => {
+                const isOutOfStock = p.stock <= 0;
+                return `
+                <div class="card-fu ${isOutOfStock ? 'product-out-of-stock' : ''}">
+                    <div>
+                        <span class="category-label">${p.type}</span>
+                        <h4 class="product-name">${p.content}</h4>
+                        <p class="product-price">$${clp(p.price)}</p>
+                    </div>
+                    <div>
+                        <div class="qty-selector">
+                            <button onclick="adjQty(${p.id}, -1)" class="qty-btn" ${isOutOfStock ? 'disabled' : ''}>-</button>
+                            <input type="number" id="qty-${p.id}" value="${isOutOfStock ? 0 : 1}" readonly class="w-8 text-center bg-transparent font-black text-xs text-white outline-none">
+                            <button onclick="adjQty(${p.id}, 1)" class="qty-btn" ${isOutOfStock ? 'disabled' : ''}>+</button>
+                        </div>
+                        <button onclick="addToCart(${p.id})" class="btn-añadir" ${isOutOfStock ? 'disabled' : ''}>
+                            ${isOutOfStock ? 'Sin Stock' : 'Añadir'}
+                        </button>
+                        <p class="text-[7px] text-gray-500 text-center mt-2 font-bold uppercase">Stock: ${p.stock}</p>
+                    </div>
+                </div>
+            `}).join('');
+            lucide.createIcons();
+        }
+
+        window.adjQty = (id, delta) => {
+            const input = document.getElementById(`qty-${id}`);
+            const p = inventory.find(i => i.id === id);
+            let val = parseInt(input.value) + delta;
+            if(val >= 1 && val <= p.stock) input.value = val;
+        }
+
+        window.addToCart = (id) => {
+            const p = inventory.find(i => i.id === id);
+            if(p.stock <= 0) return;
+            
+            const qty = parseInt(document.getElementById(`qty-${id}`).value);
+            const exist = cart.find(item => item.id === id);
+            
+            if(exist) {
+                if((exist.qty + qty) <= p.stock) exist.qty += qty;
+                else exist.qty = p.stock;
+            } else {
+                cart.push({...p, qty: qty});
+            }
+            updateUI();
+        };
+
+        function updateUI() {
+            const count = cart.reduce((acc, i) => acc + i.qty, 0);
+            const total = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
+            const summary = document.getElementById('cartSummary');
+            
+            if(count > 0) { summary.classList.remove('hidden'); summary.classList.add('flex'); }
+            else { summary.classList.add('hidden'); summary.classList.remove('flex'); }
+
+            document.getElementById('cartCount').innerText = count;
+            document.getElementById('cartTotal').innerText = "$" + clp(total);
+            document.getElementById('modalTotal').innerText = "$" + clp(total);
+            
+            document.getElementById('cartItems').innerHTML = cart.length ? cart.map((item, idx) => `
+                <div class="bg-[#202c33] p-3 rounded-xl flex justify-between items-center border-l-4 border-green-500">
+                    <div class="text-xs">
+                        <p class="font-bold text-white">${item.type} - ${item.content}</p>
+                        <p class="text-green-500 font-black">${item.qty} x $${clp(item.price)}</p>
+                    </div>
+                    <button onclick="remove(${idx})" class="text-red-400 p-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                </div>
+            `).join('') : '<p class="text-center py-5 text-[10px] font-bold uppercase opacity-30">Carrito vacío</p>';
+            lucide.createIcons();
+            setMetodo(metodo);
+        }
+
+        window.filter = (t) => { selectedCategory = t; renderCategories(); renderProducts(); };
+        window.openCart = () => document.getElementById('cartModal').style.display = 'block';
+        window.closeCart = () => document.getElementById('cartModal').style.display = 'none';
+        window.remove = (idx) => { cart.splice(idx, 1); updateUI(); if(cart.length === 0) closeCart(); };
+
+        window.setMetodo = (m) => {
+            metodo = m;
+            const isEnvio = m === 'ENVIO';
+            document.getElementById('btnEnvio').className = isEnvio ? 'py-2.5 rounded-lg font-black text-[10px] uppercase bg-white text-black' : 'py-2.5 rounded-lg font-black text-[10px] uppercase bg-transparent text-gray-500';
+            document.getElementById('btnRetiro').className = !isEnvio ? 'py-2.5 rounded-lg font-black text-[10px] uppercase bg-white text-black' : 'py-2.5 rounded-lg font-black text-[10px] uppercase bg-transparent text-gray-500';
+        };
+
+        window.sendOrder = () => {
+            if(cart.length === 0) return;
+            const items = cart.map(i => `🔥 ${i.qty}x ${i.type} - ${i.content}`).join('\n');
+            const msg = `Hola FUSIÓN URBANA! 🍔🔥\n\nQuisiera este pedido:\n\n${items}\n\n🛵 Método: ${metodo === 'ENVIO' ? 'Envío' : 'Retiro'}\n\nMe confirman disponibilidad?`;
+            window.open(`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
+        };
+
+        init();
+    </script>
+</body>
+</html>
